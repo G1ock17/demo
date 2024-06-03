@@ -16,7 +16,7 @@ def share_phone_markup():
 def main_markup():
     markup = ReplyKeyboardMarkup(resize_keyboard=True, selective=True)
     markup.row('Мой профиль', 'Мои заявки', 'Инструкция')
-    markup.row('Взять материал', 'Проверить объявление')
+    markup.row('Взять материал', 'Мой материал', 'Проверить объявление')
     markup.row('Вывести средства', 'Написать в поддержку', 'Изменить реквезиты')
     return markup
 
