@@ -151,3 +151,23 @@ def get_material(id):
     else:
         print("Заявка не найдена.")
         return []
+
+
+def get_material_patch(id):
+    withdrawal_requests = fetch_all('''SELECT patch FROM photo WHERE vin_id = ?''', (id,))
+    if withdrawal_requests:
+        return withdrawal_requests
+    else:
+        print("Заявка не найдена в бд.")
+        return []
+
+
+def add_link_if_not_exists(user_id, link):
+    withdrawal_requests = fetch_all("SELECT * FROM anc WHERE link = ?", (link,))
+
+    if withdrawal_requests:
+        return None
+    else:
+        query = "INSERT INTO anc (user_id, date, link, status) VALUES (?, ?, ?, ?)"
+        params = (user_id, datetime.now().strftime("%Y-%m-%d %H:%M:%S"), link, 0)
+        execute_query(query, params)

@@ -1,7 +1,8 @@
-from aiogram.types import Message
+from aiogram import types
 from main import dp, bot
 from database import functions
-from aiogram.types import Message, CallbackQuery, ContentTypes, InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.types import Message, CallbackQuery, ContentTypes, InlineKeyboardMarkup, InlineKeyboardButton, \
+    InputMediaPhoto
 
 
 def ikb_user_materials(user_id):
@@ -48,6 +49,13 @@ async def get_material(callback_query: CallbackQuery):
             place = request[11]
             price = request[12]
 
+            photo_paths = functions.get_material_patch(request_id)
+
+            if photo_paths:
+                media = [InputMediaPhoto(open("images/" + str(photo_path[0]) + ".jpg", 'rb')) for photo_path in photo_paths]
+                await bot.send_media_group(callback_query.message.chat.id, media, "самалейкум")
+            else:
+                await bot.send_message(callback_query.message.chat.id, "Заявка не найдена.")
 
             await callback_query.message.answer(
                 text=f'Материал №{request_id}\n\n'
@@ -64,10 +72,9 @@ async def get_material(callback_query: CallbackQuery):
                      f'Место осмотра: <code>{place}</code>\n'
                      f'Цена: <code>{price}</code>\n\n'
 
-                     f'Вид объявления: Продаю личный автомобиль.\n\n'
-                     
-                     f'Используйте номер телефона который вам выдали\n'
-                     f'',
+                     f'Вид объявления: <b>Продаю личный автомобиль.</b>\n\n'
+
+                     f'Используйте номер телефона который вам выдали\n',
                 parse_mode='html'
             )
     except Exception as e:
