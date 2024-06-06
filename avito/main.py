@@ -1,6 +1,6 @@
 from aiogram import Bot, types, Dispatcher, executor
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
-
+from adminPanel import adminPanel
 # from background import keep_alive
 
 from data import config
@@ -16,5 +16,6 @@ if __name__ == '__main__':
     from instructions import dp
     from outMoney import dp
     from support import dp
+    from adminPanel import dp
 
     executor.start_polling(dp, skip_updates=True)

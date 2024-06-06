@@ -171,3 +171,12 @@ def add_link_if_not_exists(user_id, link):
         query = "INSERT INTO anc (user_id, date, link, status) VALUES (?, ?, ?, ?)"
         params = (user_id, datetime.now().strftime("%Y-%m-%d %H:%M:%S"), link, 0)
         execute_query(query, params)
+
+
+def admin_get_req(table):
+    withdrawal_requests = fetch_all(f'''SELECT id FROM {table} WHERE status = ?''', (0,))
+    if withdrawal_requests:
+        return withdrawal_requests
+    else:
+        print("Ошибка в бд")
+        return None
