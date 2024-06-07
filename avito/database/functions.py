@@ -72,15 +72,16 @@ def get_user_information(user_id):
     return fetch_one('''SELECT user_id, date, money, requisites FROM users WHERE user_id = ?''', (user_id,))
 
 
-def subtract_from_balance(user_id, amount):
+def update_user_balance(user_id, amount, pm):
     current_balance = fetch_one("SELECT money FROM users WHERE user_id = ?", (user_id,))
 
-    if current_balance and current_balance[0] >= amount:
-        new_balance = current_balance[0] - amount
+    if pm == '+':
+        new_balance = current_balance[0] + amount
         execute_query("UPDATE users SET money = ? WHERE user_id = ?", (new_balance, user_id))
-        print(f"Сумма {amount} успешно списана со счета пользователя {user_id}.")
-    else:
-        print(f"Ошибка: пользователь {user_id} не найден или недостаточно средств на счету.")
+    if pm == '-':
+        if current_balance and current_balance[0] >= amount:
+            new_balance = current_balance[0] - amount
+            execute_query("UPDATE users SET money = ? WHERE user_id = ?", (new_balance, user_id))
 
 
 def change_requisite(user_id, new_requisite):
@@ -90,7 +91,7 @@ def change_requisite(user_id, new_requisite):
 
 def create_withdrawal_request(user_id, requisite, value):
     current_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    execute_query('''INSERT INTO out_money (requisite, user_id, value, date, status) VALUES (?, ?, ?, ?, ?)''',
+    execute_query('''INSERT INTO money (requisite, user_id, value, date, status) VALUES (?, ?, ?, ?, ?)''',
                   (requisite, user_id, value, current_date, 0))
 
     withdrawal_request_id = fetch_one("SELECT last_insert_rowid()")
@@ -103,7 +104,7 @@ def create_withdrawal_request(user_id, requisite, value):
 
 
 def get_user_applications(user_id):
-    withdrawal_requests = fetch_all('''SELECT id FROM out_money WHERE user_id = ?''', (user_id,))
+    withdrawal_requests = fetch_all('''SELECT id FROM money WHERE user_id = ?''', (user_id,))
     if withdrawal_requests:
         return withdrawal_requests
     else:
@@ -112,7 +113,7 @@ def get_user_applications(user_id):
 
 
 def get_application(id):
-    withdrawal_requests = fetch_all('''SELECT * FROM out_money WHERE id = ?''', (id,))
+    withdrawal_requests = fetch_all('''SELECT * FROM money WHERE id = ?''', (id,))
     if withdrawal_requests:
         return withdrawal_requests
     else:
@@ -140,7 +141,7 @@ def get_user_materials(user_id):
     if withdrawal_requests:
         return withdrawal_requests
     else:
-        print("У пользователя нет заявок на вывод средств.")
+        print("У пользователя нет заявок на материал.")
         return None
 
 
@@ -162,6 +163,26 @@ def get_material_patch(id):
         return []
 
 
+def give_material_user(new_user_id):
+    try:
+        # Поиск первой строки, где user_id равно NULL
+        select_query = "SELECT id FROM vins WHERE user_id IS NULL LIMIT 1"
+        row = fetch_one(select_query)
+
+        if row:
+            vin_id = row[0]  # fetch_all возвращает список кортежей, берем первый элемент первого кортежа
+            # Обновление user_id в найденной строке
+            update_query = "UPDATE vins SET user_id = ? WHERE id = ?"
+            execute_query(update_query, (new_user_id, vin_id))
+            return vin_id
+        else:
+            return None  # Если нет строк с user_id равным NULL
+
+    except sqlite3.Error as e:
+        print(f"An error occurred: {e}")
+        return None
+
+
 def add_link_if_not_exists(user_id, link):
     withdrawal_requests = fetch_all("SELECT * FROM anc WHERE link = ?", (link,))
 
@@ -179,4 +200,24 @@ def admin_get_req(table):
         return withdrawal_requests
     else:
         print("Ошибка в бд")
+        return None
+
+
+def admin_get_info_req(table, id):
+    withdrawal_requests = fetch_all(f'''SELECT * FROM {table} WHERE id = ?''', (id,))
+    if withdrawal_requests:
+        return withdrawal_requests
+    else:
+        print("Заявка не найдена.")
+        return []
+
+
+def update_status_and_get_user_id(req_type, type_id, status):
+    execute_query(f"UPDATE {req_type} SET status = ? WHERE id = ?", (status, type_id))
+
+    user_id = fetch_all(f"SELECT user_id FROM {req_type} WHERE id = ?", (type_id,))
+
+    if user_id[0][0]:
+        return user_id[0][0]
+    else:
         return None
