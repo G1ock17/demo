@@ -49,7 +49,7 @@ async def handle_confirmation(callback: CallbackQuery, state: FSMContext):
     user_info = functions.get_user_information(callback.from_user.id)
     enter_value = data['value']
     if status == "confirm":
-        functions.subtract_from_balance(callback.from_user.id, int(enter_value))
+        functions.update_user_balance(callback.from_user.id, int(enter_value), '-')
         reqID = functions.create_withdrawal_request(callback.from_user.id, user_info[3], enter_value)
         await callback.message.answer(text=f'Заявка <b>#{reqID}</b> успешно созданна! '
                                            f'\nСумма {enter_value}р'
