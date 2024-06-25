@@ -40,11 +40,12 @@ async def check(message: Message):
 
 
 @dp.message_handler(state=CheckRequests.request, content_types=ContentTypes.TEXT)
-async def handle_text_message(message: Message):
+async def handle_text_message(message: Message, state: FSMContext):
     if check_avito_link(message.text):
         functions.add_link_if_not_exists(message.from_user.id, message.text)
         await bot.send_message(chat_id=message.from_user.id, text=f"Ваше объявление отправленно на проверку.\n{message.text}\n"
                                                                       f"После одобрения модерацией вы получите средства на счет.\n"
                                                                       f"Проверка объявление происходит в течении суток.",reply_markup=keys.main_markup())
+        await state.finish()
     else:
         await bot.send_message(chat_id=message.from_user.id, text="Введите корректную ссылку !")

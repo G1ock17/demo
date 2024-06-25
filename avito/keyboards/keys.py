@@ -21,16 +21,11 @@ def main_markup():
     return markup
 
 
-def get_phone_request_keyboard():
+def admin_menu():
     keyboard = InlineKeyboardMarkup()
-    keyboard.add(InlineKeyboardButton("Поделиться номером", request_contact=True))
-    return keyboard
-
-
-def get_confirmation_keyboard(phone_number):
-    keyboard = InlineKeyboardMarkup()
-    keyboard.add(InlineKeyboardButton("Все верно 👍", callback_data=f"confirm_{phone_number}"),
-                 InlineKeyboardButton("Перепишу ❌", callback_data=f"rewrite_{phone_number}"))
+    keyboard.add(InlineKeyboardButton("Заявки на материал", callback_data=f"req_material"),
+                 InlineKeyboardButton("Проверка объявлений", callback_data=f"req_anc"),
+                 InlineKeyboardButton("Заявки на выплату", callback_data=f"req_payment"))
     return keyboard
 
 

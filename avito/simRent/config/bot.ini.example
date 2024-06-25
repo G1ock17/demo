@@ -1,0 +1,5 @@
+[Storage]
+host = localhost
+login = root
+password = qwerty
+database = smsrent

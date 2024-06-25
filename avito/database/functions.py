@@ -136,8 +136,24 @@ def get_user_requests_status(user_id):
         return True
 
 
+def get_user_limit_value(user_id):
+    withdrawal_requests = fetch_all('''SELECT max_value FROM users WHERE user_id = ?''', (user_id,))
+    if withdrawal_requests:
+        return withdrawal_requests[0][0]
+    else:
+        return 0
+
+
+def get_user_requests_value(user_id):
+    withdrawal_requests = fetch_all('''SELECT * FROM requests WHERE user_id = ? and status = ?''', (user_id, 0,))
+    if withdrawal_requests:
+        return len(withdrawal_requests)
+    else:
+        return 0
+
+
 def get_user_materials(user_id):
-    withdrawal_requests = fetch_all('''SELECT id FROM vins WHERE user_id = ? AND status = ?''', (user_id, 0,))
+    withdrawal_requests = fetch_all('''SELECT id FROM vins WHERE user_id = ? AND status = ?''', (user_id, 1,))
     if withdrawal_requests:
         return withdrawal_requests
     else:
@@ -159,7 +175,7 @@ def get_material_patch(id):
     if withdrawal_requests:
         return withdrawal_requests
     else:
-        print("Заявка не найдена в бд.")
+        print("Фото не найдена в бд.")
         return []
 
 
@@ -217,7 +233,38 @@ def update_status_and_get_user_id(req_type, type_id, status):
 
     user_id = fetch_all(f"SELECT user_id FROM {req_type} WHERE id = ?", (type_id,))
 
-    if user_id[0][0]:
+    if user_id:
         return user_id[0][0]
     else:
+        return None
+
+
+def update_status_phone_and_get_user_id(status, phone, user_id, req_type, type_id, ):
+    execute_query(
+        "UPDATE vins SET status = ?, phone = ?, user_id = ? WHERE id = (SELECT id FROM vins WHERE status = 0 AND user_id IS NULL LIMIT 1)",
+        (status, phone, user_id))
+    execute_query(f"UPDATE {req_type} SET status = ? WHERE id = ?", (2, type_id))
+    if execute_query:
+        return True
+    else:
+        return None
+
+
+def get_number_by_id(self, num_id):
+    cursor = self.execute("SELECT * FROM `numbers` WHERE `id` = %s", (num_id,))
+    return cursor.fetchone()
+
+
+def give_phone_for_user(user_id):
+    with sqlite3.connect(db_path) as conn:
+        cursor = conn.cursor()
+        cursor.execute(
+            "UPDATE numbers SET user_id = ?, status = 1 WHERE status = 0 AND id = (SELECT id FROM numbers WHERE status = 0 LIMIT 1)",
+            (user_id,))
+        conn.commit()
+        cursor.execute("SELECT phone FROM numbers WHERE user_id = ? AND status = 1 ORDER BY id DESC LIMIT 1",
+                       (user_id,))
+        result = cursor.fetchone()
+        if result:
+            return result[0]
         return None

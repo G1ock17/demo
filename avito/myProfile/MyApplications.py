@@ -8,16 +8,22 @@ def ikb_user_applications(user_id):
     keyboard = InlineKeyboardMarkup(row_width=1)
     names = functions.get_user_applications(user_id)
     applications = [name[0] for name in names]
-    for application in applications:
-        button = InlineKeyboardButton(application, callback_data=f"application_{application}")
-        keyboard.add(button)
-    return keyboard
+    if names:
+        for application in applications:
+            button = InlineKeyboardButton(application, callback_data=f"application_{application}")
+            keyboard.add(button)
+        return keyboard
+    else:
+        return None
 
 
 @dp.message_handler(text='Мои заявки')
 async def my_profile(message: Message):
     keyboard = ikb_user_applications(message.from_user.id)
-    await message.answer(text=f'Ваши заявки:', parse_mode='html', reply_markup=keyboard)
+    if keyboard:
+        await message.answer(text=f'Ваши заявки:', parse_mode='html', reply_markup=keyboard)
+    else:
+        await message.answer(text=f'У вас нет заявок')
 
 
 @dp.callback_query_handler(lambda c: c.data.startswith('application_'))

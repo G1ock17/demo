@@ -151,20 +151,28 @@ async def handle_confirmation(callback: CallbackQuery):
     action, req_type, type_id = callback.data.split('_')
 
     if action == "accept":
-        user_id = functions.update_status_and_get_user_id(req_type, type_id, 2)
+        user_id = callback.from_user.id
         if req_type == 'anc':
+            functions.update_status_and_get_user_id(req_type, type_id, 2)
             text = 'Ваше объявление одобренно, на ваш счет зачисленно <b>300р</b>.'
             functions.update_user_balance(user_id, 300, '+')
+            await bot.delete_message(callback.message.chat.id, callback.message.message_id)
             await bot.send_message(user_id, text, reply_markup=keys.main_markup(), parse_mode='html')
         if req_type == 'money':
             # функция для снятия денег со счета
+            functions.update_status_and_get_user_id(req_type, type_id, 2)
             text = 'Ваша заявка на вывод средств одобренна.'
+            await bot.delete_message(callback.message.chat.id, callback.message.message_id)
             await bot.send_message(user_id, text, reply_markup=keys.main_markup(), parse_mode='html')
         if req_type == 'requests':
-            # функция для добавления материала для пользователя
-            functions.give_material_user(user_id)
+        # функция для добавления материала для пользователя
+            phone = functions.give_phone_for_user(int(callback.from_user.id))
+            functions.update_status_phone_and_get_user_id(1, phone, callback.from_user.id, req_type, type_id)
             text = 'Ваша заявка на получение материала одобренна, вы можете посмотреть свой материал в разделе <b>Мой материал</b>'
+            await bot.delete_message(callback.message.chat.id, callback.message.message_id)
             await bot.send_message(user_id, text, reply_markup=keys.main_markup(), parse_mode='html')
+        else:
+            await callback.message.answer('Нет свободного материалал.')
 
 
     if action == "cancel":
