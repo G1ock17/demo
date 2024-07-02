@@ -149,9 +149,10 @@ async def process_product_selection(callback: CallbackQuery):
 @dp.callback_query_handler(lambda callback: callback.data.startswith(('accept_', 'cancel_')))
 async def handle_confirmation(callback: CallbackQuery):
     action, req_type, type_id = callback.data.split('_')
+    user_id = callback.from_user.id
 
     if action == "accept":
-        user_id = callback.from_user.id
+
         if req_type == 'anc':
             functions.update_status_and_get_user_id(req_type, type_id, 2)
             text = 'Ваше объявление одобренно, на ваш счет зачисленно <b>300р</b>.'
@@ -177,8 +178,17 @@ async def handle_confirmation(callback: CallbackQuery):
 
     if action == "cancel":
         if req_type == 'anc':
-            text = 'Ваше объявление одобренно, на ваш счет зачисленно <b>300р</b>.'
+            functions.refusal_of_request(req_type, type_id)
+            text = 'Ваше объявление не прошло проверку.'
+            await bot.delete_message(callback.message.chat.id, callback.message.message_id)
+            await bot.send_message(user_id, text, reply_markup=keys.main_markup(), parse_mode='html')
         if req_type == 'money':
-            text = 'Ваша заявка на вывод средств одобренна.'
+            functions.refusal_of_request(req_type, type_id)
+            text = 'Ваша заявка на вывод средств отклоненна.'
+            await bot.delete_message(callback.message.chat.id, callback.message.message_id)
+            await bot.send_message(user_id, text, reply_markup=keys.main_markup(), parse_mode='html')
         if req_type == 'requests':
-            text = 'Ваша заявка на вывод материала одобренна, вы можете посмотреть свой материал в разделе <b>Мой материал</b>'
+            functions.refusal_of_request(req_type, type_id)
+            text = 'Ваша заявка на получение материала отклонена.'
+            await bot.delete_message(callback.message.chat.id, callback.message.message_id)
+            await bot.send_message(user_id, text, reply_markup=keys.main_markup(), parse_mode='html')

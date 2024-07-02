@@ -250,6 +250,13 @@ def update_status_phone_and_get_user_id(status, phone, user_id, req_type, type_i
         return None
 
 
+def refusal_of_request(req_type, type_id):
+    execute_query(f"UPDATE {req_type} SET status = ? WHERE id = ?", (2, type_id))
+    if execute_query:
+        return True
+    else:
+        return None
+
 def get_number_by_id(self, num_id):
     cursor = self.execute("SELECT * FROM `numbers` WHERE `id` = %s", (num_id,))
     return cursor.fetchone()
